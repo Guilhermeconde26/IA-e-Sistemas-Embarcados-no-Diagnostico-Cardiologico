@@ -31,3 +31,10 @@ Python (NumPy, SciPy, scikit-learn)
 Random Forest Classifier
 
 MIT-BIH Arrhythmia Database
+
+📱 Aplicativo IC ECG
+
+A pasta [`ic-ecg/`](ic-ecg/) contém a interface gráfica do projeto: servidor FastAPI que substitui o `server.py`
+(o ESP32 continua enviando para `/classify` sem mudanças), painel web com monitor ao vivo, identificação do paciente,
+banco de dados das medições, relatório em PDF, parecer gerado por IA e modo administrador.
+Instruções de instalação e uso em [`ic-ecg/README.md`](ic-ecg/README.md).
