@@ -38,3 +38,12 @@ A pasta [`ic-ecg/`](ic-ecg/) contém a interface gráfica do projeto: servidor F
 (o ESP32 continua enviando para `/classify` sem mudanças), painel web com monitor ao vivo, identificação do paciente,
 banco de dados das medições, relatório em PDF, parecer gerado por IA e modo administrador.
 Instruções de instalação e uso em [`ic-ecg/README.md`](ic-ecg/README.md).
+
+📲 App mobile com Bluetooth (branch `app-mobile-ble`)
+
+Versão sem servidor nem Wi-Fi: o ESP32-S3 envia o sinal por Bluetooth Low Energy para um app Android
+que mostra o ECG ao vivo, classifica no próprio celular e guarda tudo localmente.
+
+- [`firmware/`](firmware/): firmware v3 do ESP32-S3 (BLE)
+- [`mobile/`](mobile/): app Android em Flutter
+- [`ml/`](ml/): pipeline de referência, dataset do MIT-BIH a 100 Hz e treino do modelo usado no app
