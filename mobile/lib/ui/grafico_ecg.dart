@@ -91,7 +91,7 @@ class _Pintor extends CustomPainter {
     double y(double v) => topo + (1 - (v - lo) / faixa) * (h - topo - base);
 
     if (g.destaque != null) {
-      canvas.drawRect(Rect.fromLTWH(x(g.destaque!) - 12, 0, 24, h), Paint()..color = Cores.verde.withValues(alpha: .15));
+      canvas.drawRect(Rect.fromLTWH(x(g.destaque!) - 12, 0, 24, h), Paint()..color = Cores.destaque.withValues(alpha: .15));
     }
 
     final traco = Paint()
@@ -116,7 +116,7 @@ class _Pintor extends CustomPainter {
 
     if (g.cursor != null) {
       final i = (g.cursor! - 1 + n) % n;
-      if (!g.sinal[i].isNaN) canvas.drawCircle(Offset(x(i), y(g.sinal[i])), 4, Paint()..color = Cores.verde);
+      if (!g.sinal[i].isNaN) canvas.drawCircle(Offset(x(i), y(g.sinal[i])), 4, Paint()..color = Cores.destaque);
     }
 
     for (final r in g.rpeaks) {

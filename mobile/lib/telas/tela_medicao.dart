@@ -6,6 +6,7 @@ import '../main.dart';
 import '../servicos/monitor.dart';
 import '../ui/componentes.dart';
 import '../ui/grafico_ecg.dart';
+import '../ui/deci_marca.dart';
 import '../ui/tema.dart';
 import 'tela_detalhe_medicao.dart';
 
@@ -32,9 +33,9 @@ class TelaMedicao extends StatelessWidget {
             if (m.fonte == Fonte.nenhuma) ...[const _CartaoConectar(), const SizedBox(height: 14)],
             const _CartaoPaciente(),
             const SizedBox(height: 14),
-            if (m.aviso != null) ...[Caixa(m.aviso!, tipo: 'aviso', icone: Icons.warning_amber), const SizedBox(height: 14)],
+            if (m.aviso != null) ...[Caixa(m.aviso!, tipo: 'aviso', icone: DeciGlifo.alerta), const SizedBox(height: 14)],
             if (s.ble.eletrodoSolto && m.fonte == Fonte.ble) ...[
-              const Caixa('Eletrodo solto — confira a colocação dos eletrodos.', tipo: 'erro', icone: Icons.link_off),
+              const Caixa('Eletrodo solto — confira a colocação dos eletrodos.', tipo: 'erro', icone: DeciGlifo.alerta),
               const SizedBox(height: 14),
             ],
             _Indicadores(m),
@@ -66,19 +67,13 @@ class TelaMedicao extends StatelessWidget {
 class _Marca extends StatelessWidget {
   const _Marca();
   @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(color: Cores.verdeClaro, borderRadius: BorderRadius.circular(10)),
-          child: const Icon(Icons.monitor_heart, color: Cores.verde, size: 20),
-        ),
-        const SizedBox(width: 10),
-        const Flexible(
-          child: Text.rich(TextSpan(children: [
-            TextSpan(text: 'IC ', style: TextStyle(fontWeight: FontWeight.w800)),
-            TextSpan(text: 'ECG', style: TextStyle(fontWeight: FontWeight.w800, color: Cores.verdeEscuro)),
-          ]), style: TextStyle(fontSize: 19), overflow: TextOverflow.fade, softWrap: false),
+  Widget build(BuildContext context) => const Row(mainAxisSize: MainAxisSize.min, children: [
+        Mascote(tamanho: 38, brilho: false),
+        SizedBox(width: 10),
+        Flexible(
+          child: Text('DECI',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Cores.texto),
+              overflow: TextOverflow.fade, softWrap: false),
         ),
       ]);
 }
@@ -91,7 +86,7 @@ class _PilulaEcg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (texto, cor, fundo) = switch (m.fonte) {
-      Fonte.ble => (ble.nomeConectado ?? 'ECG', Cores.verdeEscuro, Cores.verdeClaro),
+      Fonte.ble => (ble.nomeConectado ?? 'ECG', Cores.destaqueEscuro, Cores.destaqueClaro),
       Fonte.simulador => ('Simulador', Cores.aviso, Cores.avisoClaro),
       Fonte.nenhuma => ('ECG offline', Cores.suave, Colors.white),
     };
@@ -102,10 +97,10 @@ class _PilulaEcg extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(color: fundo, borderRadius: BorderRadius.circular(99), border: Border.all(color: Cores.linhaForte)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.memory, size: 16, color: cor),
+          DeciIcone(DeciGlifo.chip, tamanho: 16, cor: cor),
           const SizedBox(width: 5),
           Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle,
-              color: m.fonte == Fonte.nenhuma ? Cores.linhaForte : (m.fonte == Fonte.ble ? Cores.verde : Cores.aviso))),
+              color: m.fonte == Fonte.nenhuma ? Cores.linhaForte : (m.fonte == Fonte.ble ? Cores.destaque : Cores.aviso))),
           const SizedBox(width: 6),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 110),
@@ -148,14 +143,14 @@ class _CartaoConectar extends StatelessWidget {
       filho: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Text('Ligue o ECG e mantenha o celular por perto. A conexão é por Bluetooth — '
             'não precisa de Wi-Fi nem internet.', style: TextStyle(color: Cores.suave, fontSize: 13.5)),
-        if (ble.erro != null) ...[const SizedBox(height: 10), Caixa(ble.erro!, tipo: 'erro', icone: Icons.bluetooth_disabled)],
+        if (ble.erro != null) ...[const SizedBox(height: 10), Caixa(ble.erro!, tipo: 'erro', icone: DeciGlifo.bluetooth)],
         const SizedBox(height: 12),
         for (final d in ble.encontrados)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: OutlinedButton.icon(
               onPressed: ocupado && ble.estado == EstadoBle.conectando ? null : () => ble.conectar(d),
-              icon: const Icon(Icons.bluetooth),
+              icon: const DeciIcone(DeciGlifo.bluetooth, tamanho: 20),
               label: Row(children: [
                 Expanded(child: Text(d.nome)),
                 Text('${d.rssi} dBm', style: const TextStyle(color: Cores.suave, fontSize: 12)),
@@ -168,7 +163,7 @@ class _CartaoConectar extends StatelessWidget {
           onPressed: ocupado ? null : ble.procurar,
           icon: ocupado
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Icon(Icons.bluetooth_searching),
+              : const DeciIcone(DeciGlifo.bluetooth, tamanho: 20),
           label: Text(switch (ble.estado) {
             EstadoBle.procurando => 'Procurando…',
             EstadoBle.conectando => 'Conectando…',
@@ -209,8 +204,8 @@ class _CartaoPacienteState extends State<_CartaoPaciente> {
         filho: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             CircleAvatar(
-              backgroundColor: Cores.verdeClaro,
-              child: Text(_iniciais(p?.nome ?? '?'), style: const TextStyle(color: Cores.verdeEscuro, fontWeight: FontWeight.w700)),
+              backgroundColor: Cores.destaqueClaro,
+              child: Text(_iniciais(p?.nome ?? '?'), style: const TextStyle(color: Cores.destaqueEscuro, fontWeight: FontWeight.w700)),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -230,7 +225,7 @@ class _CartaoPacienteState extends State<_CartaoPaciente> {
                 value: (m.medicoesFeitas + m.progressoBloco) / m.medicoesPorSessao,
                 minHeight: 8,
                 backgroundColor: Cores.painel2,
-                color: Cores.verde),
+                color: Cores.destaque),
           ),
         ]),
       );
@@ -274,7 +269,7 @@ class _CartaoPacienteState extends State<_CartaoPaciente> {
                       sexo: _sexo));
                   FocusScope.of(context).unfocus();
                 },
-          icon: const Icon(Icons.play_arrow),
+          icon: const DeciIcone(DeciGlifo.play, tamanho: 20),
           label: Text(semFonte ? 'Conecte o ECG para medir' : 'Iniciar medição'),
         ),
         const SizedBox(height: 6),
@@ -356,7 +351,7 @@ class _FaixaSessao extends StatelessWidget {
               child: Container(
                 width: 150,
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(border: Border.all(color: i == 0 ? Cores.verde : Cores.linha), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(border: Border.all(color: i == 0 ? Cores.destaque : Cores.linha), borderRadius: BorderRadius.circular(10)),
                 child: Column(children: [
                   Expanded(child: GraficoEcg(sinal: u.filtrado, rpeaks: u.rpeaks, classePorPico: u.classePorPico,
                       grade: false, rotulos: false, altura: 48, mensagemVazio: u.erro ?? '')),

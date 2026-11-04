@@ -9,25 +9,26 @@ import '../ui/componentes.dart' show formatarData, formatarHora, sexos;
 import '../ui/tema.dart' show descricaoClasse;
 import 'relatorio.dart';
 
-const _verde = PdfColor.fromInt(0xFF4CC982);
-const _verdeEscuro = PdfColor.fromInt(0xFF0F6B3A);
-const _verdeClaro = PdfColor.fromInt(0xFFE9F8EF);
-const _suave = PdfColor.fromInt(0xFF64776B);
-const _linha = PdfColor.fromInt(0xFFE1ECE5);
-const _grade = PdfColor.fromInt(0xFFEDF7F0);
-const _gradeForte = PdfColor.fromInt(0xFFCFE8D7);
-const _traco = PdfColor.fromInt(0xFF128048);
+const _verde = PdfColor.fromInt(0xFFF2456F); // destaque coral do DECI
+const _verdeEscuro = PdfColor.fromInt(0xFFC42452);
+const _verdeClaro = PdfColor.fromInt(0xFFFDE0E4);
+const _suave = PdfColor.fromInt(0xFF8A6669);
+const _linha = PdfColor.fromInt(0xFFF6DCD8);
+const _grade = PdfColor.fromInt(0xFFFBE6E4);
+const _gradeForte = PdfColor.fromInt(0xFFF4C7C6);
+const _traco = PdfColor.fromInt(0xFF4A1820);
 const _coresClasse = {
-  'N': PdfColor.fromInt(0xFF1F9D55),
-  'S': PdfColor.fromInt(0xFFC27C0E),
-  'V': PdfColor.fromInt(0xFFD64545),
-  'F': PdfColor.fromInt(0xFF8B5CF6),
+  'N': PdfColor.fromInt(0xFF2E9E6B),
+  'S': PdfColor.fromInt(0xFFD08A12),
+  'V': PdfColor.fromInt(0xFFB3261E),
+  'F': PdfColor.fromInt(0xFF7E57C2),
 };
 
 Future<Uint8List> gerarPdf(DadosRelatorio d) async {
-  final logo = pw.MemoryImage((await rootBundle.load('assets/img/ufop-logo-verde.png')).buffer.asUint8List());
+  final logo = pw.MemoryImage((await rootBundle.load('assets/img/ufop-logo.png')).buffer.asUint8List());
+  final mascote = pw.MemoryImage((await rootBundle.load('assets/img/deci-mascote.png')).buffer.asUint8List());
   final s = d.sessao;
-  final doc = pw.Document(title: 'IC ECG - Sessão ${s['id']}', author: 'IC ECG');
+  final doc = pw.Document(title: 'DECI - Sessão ${s['id']}', author: 'DECI');
   const pequeno = pw.TextStyle(fontSize: 8.5, color: _suave);
 
   pw.Widget kpi(String rotulo, String valor) => pw.Expanded(
@@ -57,11 +58,14 @@ Future<Uint8List> gerarPdf(DadosRelatorio d) async {
       margin: const pw.EdgeInsets.only(bottom: 12),
       decoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: _verde, width: 2))),
       child: pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-        pw.RichText(text: pw.TextSpan(children: [
-          pw.TextSpan(text: 'IC ', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-          pw.TextSpan(text: 'ECG', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: _verdeEscuro)),
-          const pw.TextSpan(text: '  Relatório de eletrocardiograma', style: pw.TextStyle(fontSize: 10, color: _suave)),
-        ])),
+        pw.Row(children: [
+          pw.Image(mascote, height: 24),
+          pw.SizedBox(width: 6),
+          pw.RichText(text: pw.TextSpan(children: [
+            pw.TextSpan(text: 'DECI', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, letterSpacing: 1)),
+            const pw.TextSpan(text: '  Diagnóstico de Eletrocardiograma Instantâneo', style: pw.TextStyle(fontSize: 9, color: _suave)),
+          ])),
+        ]),
         pw.Text('Emitido em ${formatarData(DateTime.now().toUtc().toIso8601String())}', style: pequeno),
       ]),
     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'deci_marca.dart';
 import 'tema.dart';
 
 class TagClasse extends StatelessWidget {
@@ -40,8 +41,8 @@ class Kpi extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: destaque ? Cores.verdeClaro : Cores.painel,
-        border: Border.all(color: destaque ? Cores.verde : Cores.linha),
+        color: destaque ? Cores.destaqueClaro : Cores.painel,
+        border: Border.all(color: destaque ? Cores.destaque : Cores.linha),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -101,9 +102,9 @@ class Secao extends StatelessWidget {
 }
 
 class Caixa extends StatelessWidget {
-  const Caixa(this.texto, {super.key, this.icone = Icons.info_outline, this.tipo = 'info'});
+  const Caixa(this.texto, {super.key, this.icone = DeciGlifo.info, this.tipo = 'info'});
   final String texto;
-  final IconData icone;
+  final DeciGlifo icone;
   final String tipo; // info | aviso | erro
 
   @override
@@ -111,13 +112,13 @@ class Caixa extends StatelessWidget {
     final (fundo, cor) = switch (tipo) {
       'aviso' => (Cores.avisoClaro, Cores.aviso),
       'erro' => (const Color(0xFFFDEEEE), Cores.perigo),
-      _ => (Cores.verdeClaro, Cores.verdeEscuro),
+      _ => (Cores.destaqueClaro, Cores.destaqueEscuro),
     };
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: fundo, borderRadius: BorderRadius.circular(12)),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icone, size: 18, color: cor),
+        DeciIcone(icone, tamanho: 18, cor: cor),
         const SizedBox(width: 8),
         Expanded(child: Text(texto, style: TextStyle(color: cor, fontSize: 13.5))),
       ]),
@@ -131,7 +132,7 @@ class LogoUfop extends StatelessWidget {
   final double altura;
   @override
   Widget build(BuildContext context) =>
-      Image.asset('assets/img/ufop-logo-verde.png', height: altura, semanticLabel: 'Logo da UFOP');
+      Image.asset('assets/img/ufop-logo.png', height: altura, semanticLabel: 'Logo da UFOP');
 }
 
 class Rodape extends StatelessWidget {

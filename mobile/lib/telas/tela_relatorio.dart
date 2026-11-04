@@ -6,6 +6,7 @@ import '../servicos/relatorio.dart';
 import '../servicos/relatorio_pdf.dart';
 import '../ui/componentes.dart';
 import '../ui/grafico_ecg.dart';
+import '../ui/deci_marca.dart';
 import '../ui/tema.dart';
 import 'tela_detalhe_medicao.dart';
 
@@ -78,12 +79,12 @@ class _TelaRelatorioState extends State<TelaRelatorio> {
         actions: [
           IconButton(
             tooltip: 'Gerar PDF',
-            icon: const Icon(Icons.picture_as_pdf_outlined, color: Cores.verdeEscuro),
+            icon: const DeciIcone(DeciGlifo.pdf, tamanho: 26, cor: Cores.destaqueEscuro),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => _TelaPdf(d))),
           ),
           IconButton(
             tooltip: 'Excluir sessão',
-            icon: const Icon(Icons.delete_outline, color: Cores.perigo),
+            icon: const DeciIcone(DeciGlifo.lixeira, cor: Cores.perigo),
             onPressed: () async {
               final ok = await confirmar(context, 'Excluir a sessão #${s['id']}?',
                   'A sessão e todas as suas medições serão apagadas. Isso não pode ser desfeito.');
@@ -207,7 +208,7 @@ class _TelaPdf extends StatelessWidget {
   final DadosRelatorio d;
   @override
   Widget build(BuildContext context) {
-    final nome = 'IC ECG - Sessao ${d.sessao['id']}${d.sessao['patient'] != null ? ' - ${d.sessao['patient']}' : ''}.pdf';
+    final nome = 'DECI - Sessao ${d.sessao['id']}${d.sessao['patient'] != null ? ' - ${d.sessao['patient']}' : ''}.pdf';
     return Scaffold(
       appBar: AppBar(title: const Text('Relatório em PDF')),
       body: PdfPreview(

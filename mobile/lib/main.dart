@@ -6,9 +6,11 @@ import 'dados/banco.dart';
 import 'pipeline/modelo_rf.dart';
 import 'servicos/monitor.dart';
 import 'servicos/operador.dart';
+import 'telas/tela_abertura.dart';
 import 'telas/tela_medicao.dart';
 import 'telas/tela_operador.dart';
 import 'telas/tela_resultados.dart';
+import 'ui/deci_marca.dart';
 import 'ui/tema.dart';
 
 /// Serviços do app, acessíveis em qualquer tela com Servicos.of(context).
@@ -26,24 +28,57 @@ class Servicos extends InheritedWidget {
   bool updateShouldNotify(Servicos old) => false;
 }
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final banco = await Banco.abrir();
-  final modelo = ModeloRF.deJson(await rootBundle.loadString('assets/modelo_rf.json'));
-  final operador = await Operador.carregar();
-  final ble = EcgBle();
-  final monitor = Monitor(banco, modelo, ble)..medicoesPorSessao = operador.medicoesPorSessao;
-  runApp(Servicos(banco: banco, modelo: modelo, ble: ble, monitor: monitor, operador: operador, child: const IcEcgApp()));
+  runApp(const DeciRaiz());
 }
 
-class IcEcgApp extends StatelessWidget {
-  const IcEcgApp({super.key});
+/// Mostra a abertura animada enquanto carrega banco, modelo e preferências; depois abre o app.
+class DeciRaiz extends StatefulWidget {
+  const DeciRaiz({super.key});
+  @override
+  State<DeciRaiz> createState() => _DeciRaizState();
+}
+
+class _DeciRaizState extends State<DeciRaiz> {
+  Servicos? _servicos;
+  bool _pronto = false;
+
+  Future<void> _carregar() async {
+    final banco = await Banco.abrir();
+    final modelo = ModeloRF.deJson(await rootBundle.loadString('assets/modelo_rf.json'));
+    final operador = await Operador.carregar();
+    final ble = EcgBle();
+    final monitor = Monitor(banco, modelo, ble)..medicoesPorSessao = operador.medicoesPorSessao;
+    _servicos = Servicos(banco: banco, modelo: modelo, ble: ble, monitor: monitor, operador: operador, child: const DeciApp());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_pronto && _servicos != null) return _servicos!;
+    return MaterialApp(
+      title: 'DECI',
+      debugShowCheckedModeBanner: false,
+      theme: temaDeci(),
+      home: TelaAbertura(carregar: _carregar, aoTerminar: () => setState(() => _pronto = true)),
+    );
+  }
+}
+
+class DeciApp extends StatelessWidget {
+  const DeciApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'IC ECG',
+        title: 'DECI',
         debugShowCheckedModeBanner: false,
-        theme: temaIcEcg(),
-        home: const Inicio(),
+        theme: temaDeci(),
+        // entra suavemente depois da abertura
+        home: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 450),
+          builder: (_, v, child) => Opacity(opacity: v, child: child),
+          child: const Inicio(),
+        ),
       );
 }
 
@@ -64,13 +99,13 @@ class _InicioState extends State<Inicio> {
       builder: (context, _) {
         // modo paciente: só Medição e Operador
         final abas = [
-          (const TelaMedicao(), const NavigationDestination(icon: Icon(Icons.monitor_heart_outlined),
-              selectedIcon: Icon(Icons.monitor_heart), label: 'Medição')),
+          (const TelaMedicao(), const NavigationDestination(icon: DeciIcone(DeciGlifo.ecg, tamanho: 34, blob: true, ativo: false),
+              selectedIcon: DeciIcone(DeciGlifo.ecg, tamanho: 34, blob: true), label: 'Medição')),
           if (op.admin)
-            (const TelaResultados(), const NavigationDestination(icon: Icon(Icons.folder_outlined),
-                selectedIcon: Icon(Icons.folder), label: 'Resultados')),
-          (const TelaOperador(), const NavigationDestination(icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person), label: 'Operador')),
+            (const TelaResultados(), const NavigationDestination(icon: DeciIcone(DeciGlifo.pasta, tamanho: 34, blob: true, ativo: false),
+                selectedIcon: DeciIcone(DeciGlifo.pasta, tamanho: 34, blob: true), label: 'Resultados')),
+          (const TelaOperador(), const NavigationDestination(icon: DeciIcone(DeciGlifo.pessoa, tamanho: 34, blob: true, ativo: false),
+              selectedIcon: DeciIcone(DeciGlifo.pessoa, tamanho: 34, blob: true), label: 'Operador')),
         ];
         final i = abas.indexWhere((a) => a.$2.label == _aba);
         final aba = i < 0 ? 0 : i;

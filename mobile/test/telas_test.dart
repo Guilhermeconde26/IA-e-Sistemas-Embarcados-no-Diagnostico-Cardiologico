@@ -33,7 +33,7 @@ void main() {
       final op = await Operador.carregar();
       final ble = EcgBle();
       servicos = Servicos(banco: banco, modelo: modelo, ble: ble, monitor: Monitor(banco, modelo, ble), operador: op,
-          child: const IcEcgApp());
+          child: const DeciApp());
     });
     await tester.pumpWidget(servicos);
     await tester.pump();

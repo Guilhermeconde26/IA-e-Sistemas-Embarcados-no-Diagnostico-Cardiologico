@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../ui/componentes.dart';
+import '../ui/deci_marca.dart';
 import '../ui/tema.dart';
 import 'tela_detalhe_medicao.dart' show confirmar;
 import 'tela_relatorio.dart';
@@ -56,10 +57,10 @@ class _TelaResultadosState extends State<TelaResultados> {
                 onSubmitted: (_) => _carregar(),
                 decoration: InputDecoration(
                   hintText: 'Buscar paciente, prontuário ou nº',
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Padding(padding: EdgeInsets.all(12), child: DeciIcone(DeciGlifo.busca, tamanho: 20, cor: Cores.suave)),
                   suffixIcon: _busca.text.isEmpty
                       ? null
-                      : IconButton(icon: const Icon(Icons.clear), onPressed: () { _busca.clear(); _carregar(); }),
+                      : IconButton(icon: const DeciIcone(DeciGlifo.fechar, tamanho: 18, cor: Cores.suave), onPressed: () { _busca.clear(); _carregar(); }),
                 ),
                 onChanged: (_) => setState(() {}),
               ),

@@ -1,6 +1,6 @@
-# IC ECG — app Android
+# DECI — Diagnóstico de Eletrocardiograma Instantâneo
 
-App do projeto IC ECG: conecta ao ECG (ESP32-S3) por **Bluetooth Low Energy**, mostra o traçado em
+App Android do projeto: conecta ao ECG (ESP32-S3) por **Bluetooth Low Energy**, mostra o traçado em
 tempo real, classifica cada janela de 10 s no próprio celular e guarda tudo num banco local.
 Funciona **sem internet e sem servidor**.
 
@@ -11,6 +11,15 @@ ESP32-S3 + AD8232 ──BLE (100 Hz, pacotes de 10 amostras)──▶ app
                                                             ├─ SQLite no celular (sessões, medições, batimentos)
                                                             └─ PDF, revisão de rótulos, exportação do dataset
 ```
+
+## Identidade visual
+
+- Paleta e personagem em `lib/ui/deci_marca.dart` (contorno traçado do ícone original); ícones no mesmo
+  estilo (`DeciIcone`); tema em `lib/ui/tema.dart`.
+- Abertura animada (`lib/telas/tela_abertura.dart`): o personagem vira um traçado de ECG e aparece o nome.
+- Ícone do Android: `python tools/gerar_icones_android.py` (a partir de `tools/deci-icone-original.webp`).
+- Imagem do personagem usada no PDF: `flutter test test/preview_marca_test.dart --dart-define=ASSETS=assets/img`.
+- Capturas de tela para conferir o visual: `flutter test test/capturas_test.dart --dart-define=CAPTURAS=pasta`.
 
 ## Abas
 

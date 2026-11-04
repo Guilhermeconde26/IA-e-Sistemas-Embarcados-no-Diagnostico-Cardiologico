@@ -1,4 +1,4 @@
-// Pipeline do IC ECG — tradução linha a linha de ml/pipeline_ecg.py.
+// Pipeline do DECI — tradução linha a linha de ml/pipeline_ecg.py.
 // O modelo só acerta se estas contas forem idênticas às do treino; test/pipeline_test.dart
 // compara com test/golden.json (gerado pelo Python). Mudou algo aqui? Mude lá e regenere o golden.
 import 'dart:math' as math;

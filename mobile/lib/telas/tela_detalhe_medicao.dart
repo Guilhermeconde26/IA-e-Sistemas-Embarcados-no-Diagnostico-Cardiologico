@@ -6,6 +6,7 @@ import '../main.dart';
 import '../pipeline/pipeline_ecg.dart' as pipe;
 import '../ui/componentes.dart';
 import '../ui/grafico_ecg.dart';
+import '../ui/deci_marca.dart';
 import '../ui/tema.dart';
 
 class TelaDetalheMedicao extends StatefulWidget {
@@ -64,7 +65,7 @@ class _TelaDetalheMedicaoState extends State<TelaDetalheMedicao> {
           if (admin)
             IconButton(
               tooltip: 'Excluir medição',
-              icon: const Icon(Icons.delete_outline, color: Cores.perigo),
+              icon: const DeciIcone(DeciGlifo.lixeira, cor: Cores.perigo),
               onPressed: () async {
                 final ok = await confirmar(context, 'Excluir a medição #${m['id']}?',
                     'A medição e seus batimentos serão apagados. Se for a última da sessão, a sessão também será.');
@@ -128,7 +129,7 @@ class _TelaDetalheMedicaoState extends State<TelaDetalheMedicao> {
     return ListTile(
       dense: true,
       selected: _destaque == r,
-      selectedTileColor: Cores.verdeClaro,
+      selectedTileColor: Cores.destaqueClaro,
       onTap: () => setState(() => _destaque = r),
       leading: Text('${i + 1}', style: const TextStyle(color: Cores.suave)),
       title: Row(children: [

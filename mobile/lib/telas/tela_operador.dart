@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../main.dart';
 import '../servicos/monitor.dart';
 import '../ui/componentes.dart';
+import '../ui/deci_marca.dart';
 import '../ui/tema.dart';
 
 class TelaOperador extends StatelessWidget {
@@ -62,8 +63,8 @@ class _ModoState extends State<_Modo> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: atual ? Cores.verdeClaro : Colors.white,
-              border: Border.all(color: atual ? Cores.verde : Cores.linhaForte),
+              color: atual ? Cores.destaqueClaro : Colors.white,
+              border: Border.all(color: atual ? Cores.destaque : Cores.linhaForte),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -85,7 +86,7 @@ class _ModoState extends State<_Modo> {
         ),
         const SizedBox(height: 14),
         if (op.admin)
-          OutlinedButton.icon(onPressed: op.sair, icon: const Icon(Icons.logout), label: const Text('Mudar para modo paciente'))
+          OutlinedButton.icon(onPressed: op.sair, icon: const DeciIcone(DeciGlifo.sair, tamanho: 20), label: const Text('Mudar para modo paciente'))
         else ...[
           TextField(
             controller: _pin,
@@ -157,14 +158,14 @@ class _SimuladorState extends State<_Simulador> {
         ),
         const SizedBox(height: 6),
         ativo
-            ? OutlinedButton.icon(onPressed: m.pararSimulador, icon: const Icon(Icons.stop), label: const Text('Parar simulador'))
+            ? OutlinedButton.icon(onPressed: m.pararSimulador, icon: const DeciIcone(DeciGlifo.stop, tamanho: 20), label: const Text('Parar simulador'))
             : FilledButton.icon(
                 onPressed: () {
                   m.iniciarSimulador(bpm: _bpm, ruido: _ruido, extrassistoles: _extras);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('Simulador ligado. Vá para a aba Medição e inicie uma medição.')));
                 },
-                icon: const Icon(Icons.play_arrow),
+                icon: const DeciIcone(DeciGlifo.play, tamanho: 20),
                 label: const Text('Ligar simulador'),
               ),
       ]),
@@ -222,7 +223,7 @@ class _DatasetState extends State<_Dataset> {
     await arq.writeAsString(csv);
     await SharePlus.instance.share(ShareParams(
       files: [XFile(arq.path, mimeType: 'text/csv')],
-      subject: 'IC ECG — dataset de batimentos',
+      subject: 'DECI — dataset de batimentos',
       text: 'Colunas compatíveis com ml/treinar.py',
     ));
   }
@@ -238,7 +239,7 @@ class _DatasetState extends State<_Dataset> {
             : '${st['sessoes']} sessões reais (${st['simuladas']} simuladas, fora do dataset) · '
                 '${st['medicoes']} medições · ${st['batimentos']} batimentos · ${st['revisados']} revisados'),
         const SizedBox(height: 12),
-        FilledButton.icon(onPressed: () => _exportar(true), icon: const Icon(Icons.ios_share), label: const Text('Exportar só revisados')),
+        FilledButton.icon(onPressed: () => _exportar(true), icon: const DeciIcone(DeciGlifo.compartilhar, tamanho: 20), label: const Text('Exportar só revisados')),
         const SizedBox(height: 8),
         OutlinedButton(onPressed: () => _exportar(false), child: const Text('Exportar todos (rótulo previsto)')),
         const SizedBox(height: 6),

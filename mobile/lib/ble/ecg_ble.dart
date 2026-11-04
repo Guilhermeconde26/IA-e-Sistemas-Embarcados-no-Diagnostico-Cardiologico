@@ -108,7 +108,7 @@ class EcgBle extends ChangeNotifier {
       }));
       final servicos = await d.device.discoverServices();
       final svc = servicos.where((s) => s.uuid == uuidServico).firstOrNull;
-      if (svc == null) throw Exception('O dispositivo não tem o serviço do IC ECG (firmware v3?).');
+      if (svc == null) throw Exception('O dispositivo não tem o serviço do DECI (firmware v3?).');
       final chEcg = svc.characteristics.firstWhere((c) => c.uuid == uuidEcg);
       final chStatus = svc.characteristics.firstWhere((c) => c.uuid == uuidStatus);
 
