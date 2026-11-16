@@ -7,8 +7,8 @@ import 'pipeline/modelo_rf.dart';
 import 'servicos/monitor.dart';
 import 'servicos/operador.dart';
 import 'telas/tela_abertura.dart';
-import 'telas/tela_medicao.dart';
-import 'telas/tela_operador.dart';
+import 'telas/tela_adm.dart';
+import 'telas/tela_inicio.dart';
 import 'telas/tela_resultados.dart';
 import 'ui/deci_marca.dart';
 import 'ui/tema.dart';
@@ -89,7 +89,7 @@ class Inicio extends StatefulWidget {
 }
 
 class _InicioState extends State<Inicio> {
-  String _aba = 'Medição'; // pela etiqueta: as abas mudam ao entrar/sair do modo admin
+  String _aba = 'Início'; // pela etiqueta: as abas mudam ao entrar/sair do modo admin
 
   @override
   Widget build(BuildContext context) {
@@ -97,23 +97,52 @@ class _InicioState extends State<Inicio> {
     return ListenableBuilder(
       listenable: op,
       builder: (context, _) {
-        // modo paciente: só Medição e Operador
+        // modo paciente: só Início e ADM
         final abas = [
-          (const TelaMedicao(), const NavigationDestination(icon: DeciIcone(DeciGlifo.ecg, tamanho: 34, blob: true, ativo: false),
-              selectedIcon: DeciIcone(DeciGlifo.ecg, tamanho: 34, blob: true), label: 'Medição')),
+          (const TelaInicio(), const NavigationDestination(icon: DeciIcone(DeciGlifo.casa, tamanho: 34, blob: true, ativo: false),
+              selectedIcon: DeciIcone(DeciGlifo.casa, tamanho: 34, blob: true), label: 'Início')),
           if (op.admin)
             (const TelaResultados(), const NavigationDestination(icon: DeciIcone(DeciGlifo.pasta, tamanho: 34, blob: true, ativo: false),
                 selectedIcon: DeciIcone(DeciGlifo.pasta, tamanho: 34, blob: true), label: 'Resultados')),
-          (const TelaOperador(), const NavigationDestination(icon: DeciIcone(DeciGlifo.pessoa, tamanho: 34, blob: true, ativo: false),
-              selectedIcon: DeciIcone(DeciGlifo.pessoa, tamanho: 34, blob: true), label: 'Operador')),
+          (const TelaAdm(), const NavigationDestination(icon: DeciIcone(DeciGlifo.pessoa, tamanho: 34, blob: true, ativo: false),
+              selectedIcon: DeciIcone(DeciGlifo.pessoa, tamanho: 34, blob: true), label: 'ADM')),
         ];
         final i = abas.indexWhere((a) => a.$2.label == _aba);
         final aba = i < 0 ? 0 : i;
+        final telas = IndexedStack(index: aba, children: [for (final a in abas) a.$1]);
+        void escolher(int i) => setState(() => _aba = abas[i].$2.label);
+        // tela larga (tablet deitado): menu na lateral em vez da barra de baixo
+        if (MediaQuery.sizeOf(context).width >= 840) {
+          return Scaffold(
+            body: Row(children: [
+              SafeArea(
+                right: false,
+                child: NavigationRail(
+                  selectedIndex: aba,
+                  onDestinationSelected: escolher,
+                  labelType: NavigationRailLabelType.all,
+                  backgroundColor: Colors.white,
+                  indicatorColor: Colors.transparent,
+                  groupAlignment: 0,
+                  minWidth: 96,
+                  selectedLabelTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Cores.destaqueEscuro),
+                  unselectedLabelTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Cores.suave),
+                  destinations: [
+                    for (final a in abas)
+                      NavigationRailDestination(icon: a.$2.icon, selectedIcon: a.$2.selectedIcon, label: Text(a.$2.label)),
+                  ],
+                ),
+              ),
+              const VerticalDivider(width: 1, thickness: 1, color: Cores.linha),
+              Expanded(child: telas),
+            ]),
+          );
+        }
         return Scaffold(
-          body: IndexedStack(index: aba, children: [for (final a in abas) a.$1]),
+          body: telas,
           bottomNavigationBar: NavigationBar(
             selectedIndex: aba,
-            onDestinationSelected: (i) => setState(() => _aba = abas[i].$2.label),
+            onDestinationSelected: escolher,
             destinations: [for (final a in abas) a.$2],
           ),
         );

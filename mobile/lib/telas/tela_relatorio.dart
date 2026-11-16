@@ -95,7 +95,7 @@ class _TelaRelatorioState extends State<TelaRelatorio> {
           ),
         ],
       ),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListaResponsiva(children: [
         Text('${formatarData(s['inicio'] as String?)}${s['simulada'] == 1 ? ' · simulada' : ''} · ${s['dispositivo']}',
             style: const TextStyle(color: Cores.suave)),
         const SizedBox(height: 12),
@@ -166,8 +166,6 @@ class _TelaRelatorioState extends State<TelaRelatorio> {
               ),
           ]),
         ),
-        const SizedBox(height: 8),
-        const Rodape(),
       ]),
     );
   }

@@ -15,6 +15,7 @@ class GraficoEcg extends StatelessWidget {
     this.grade = true,
     this.rotulos = true,
     this.destaque,
+    this.errados = const {},
     this.mensagemVazio = 'Aguardando sinal do ECG…',
   });
 
@@ -26,6 +27,7 @@ class GraficoEcg extends StatelessWidget {
   final double altura;
   final bool grade, rotulos;
   final int? destaque;
+  final Set<int> errados; // picos em que o modelo errou (simulador): ganham um anel
   final String mensagemVazio;
 
   @override
@@ -124,6 +126,12 @@ class _Pintor extends CustomPainter {
       final c = g.classePorPico[r];
       final cor = corDaClasse(c);
       canvas.drawCircle(Offset(x(r), y(g.sinal[r])), g.rotulos ? 3.5 : 2, Paint()..color = c == null ? Cores.suave : cor);
+      if (g.errados.contains(r)) {
+        canvas.drawCircle(Offset(x(r), y(g.sinal[r])), 8, Paint()
+          ..color = Cores.perigo
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2);
+      }
       if (g.rotulos && c != null) {
         final tp = TextPainter(
             text: TextSpan(text: c, style: TextStyle(color: cor, fontSize: 12, fontWeight: FontWeight.w700)),

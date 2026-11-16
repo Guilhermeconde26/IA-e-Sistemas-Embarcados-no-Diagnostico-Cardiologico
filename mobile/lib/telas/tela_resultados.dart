@@ -50,7 +50,7 @@ class _TelaResultadosState extends State<TelaResultados> {
           }
           return RefreshIndicator(
             onRefresh: _carregar,
-            child: ListView(padding: const EdgeInsets.all(16), children: [
+            child: ListaResponsiva(children: [
               TextField(
                 controller: _busca,
                 textInputAction: TextInputAction.search,

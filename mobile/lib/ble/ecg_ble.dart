@@ -14,7 +14,7 @@ enum EstadoBle { desligado, procurando, conectando, conectado, desconectado }
 class DispositivoEncontrado {
   final BluetoothDevice device;
   final String nome;
-  final int rssi;
+  final int? rssi; // null = já conectado/pareado pelo Android (não veio da busca)
   DispositivoEncontrado(this.device, this.nome, this.rssi);
 }
 
@@ -29,6 +29,8 @@ class EcgBle extends ChangeNotifier {
   int pacotesRecebidos = 0;
   DateTime? ultimoPacote;
   List<DispositivoEncontrado> encontrados = [];
+  bool nadaEncontrado = false; // a última busca terminou sem achar nenhum ECG
+  int vistosPorPerto = 0; // aparelhos Bluetooth de qualquer tipo vistos na última busca (diagnóstico)
 
   final _amostras = StreamController<List<int>>.broadcast();
   Stream<List<int>> get amostras => _amostras.stream;
@@ -42,49 +44,93 @@ class EcgBle extends ChangeNotifier {
   bool get conectado => estado == EstadoBle.conectado;
 
   Future<bool> bluetoothLigado() async {
-    if (!await FlutterBluePlus.isSupported) {
-      erro = 'Este celular não tem Bluetooth LE.';
-      notifyListeners();
-      return false;
+    if (!await FlutterBluePlus.isSupported.timeout(const Duration(seconds: 5))) {
+      throw const _FalhaBusca('Este aparelho não tem Bluetooth LE.');
     }
-    final st = await FlutterBluePlus.adapterState.first;
+    // sem a permissão "Dispositivos próximos" o Android responde "desconhecido" em vez de "ligado"
+    final st = await FlutterBluePlus.adapterState
+        .where((s) => s != BluetoothAdapterState.unknown)
+        .first
+        .timeout(const Duration(seconds: 3), onTimeout: () => FlutterBluePlus.adapterStateNow);
     return st == BluetoothAdapterState.on;
   }
 
   Future<void> procurar() async {
     erro = null;
     encontrados = [];
-    if (!await bluetoothLigado()) {
-      try {
-        await FlutterBluePlus.turnOn(); // Android pede para o usuário ligar
-      } catch (_) {
-        erro = 'Ligue o Bluetooth do celular para encontrar o ECG.';
-        notifyListeners();
-        return;
-      }
-    }
+    nadaEncontrado = false;
+    vistosPorPerto = 0;
+    // mostra "Procurando…" na hora do toque, antes de qualquer espera
     estado = EstadoBle.procurando;
     notifyListeners();
+    try {
+      await _procurar();
+    } on _FalhaBusca catch (e) {
+      erro = e.mensagem;
+    } on TimeoutException {
+      erro = 'O Bluetooth do aparelho não respondeu. Desligue e ligue o Bluetooth e tente de novo.';
+    } catch (e) {
+      erro = 'Não foi possível procurar: $e';
+    }
+    try {
+      await FlutterBluePlus.stopScan();
+    } catch (_) {}
+    if (estado == EstadoBle.procurando) estado = EstadoBle.desligado;
+    nadaEncontrado = erro == null && encontrados.isEmpty;
+    notifyListeners();
+  }
+
+  Future<void> _procurar() async {
+    if (!await bluetoothLigado()) {
+      try {
+        // Android pede a permissão (se faltar) e para o usuário ligar o Bluetooth
+        await FlutterBluePlus.turnOn(timeout: 30);
+      } catch (e) {
+        throw _FalhaBusca('Ligue o Bluetooth e permita "Dispositivos próximos" para o DECI. ($e)');
+      }
+      if (!await bluetoothLigado()) {
+        throw const _FalhaBusca('O Bluetooth está desligado ou o DECI não tem a permissão "Dispositivos próximos" '
+            '(Configurações > Apps > DECI > Permissões).');
+      }
+    }
+
+    // ECG já conectado/pareado pelo próprio Android (ex.: pelas configurações de Bluetooth): nesse caso
+    // o ESP para de anunciar e a busca normal não o enxerga — então listamos esses também.
+    final doSistema = <DispositivoEncontrado>[];
+    final vistos = <String>{};
+    Future<void> juntar(Future<List<BluetoothDevice>> f, bool Function(BluetoothDevice) aceitar) async {
+      try {
+        for (final d in await f.timeout(const Duration(seconds: 4))) {
+          if (aceitar(d) && vistos.add(d.remoteId.str)) {
+            doSistema.add(DispositivoEncontrado(d, d.platformName.isEmpty ? prefixoNome : d.platformName, null));
+          }
+        }
+      } catch (_) {
+        // sem permissão ou sem suporte: segue só com a busca
+      }
+    }
+
+    await juntar(FlutterBluePlus.systemDevices([uuidServico]), (_) => true);
+    await juntar(FlutterBluePlus.bondedDevices, (d) => d.platformName.startsWith(prefixoNome));
+    encontrados = doSistema;
+    notifyListeners();
+
     await _subScan?.cancel();
     _subScan = FlutterBluePlus.scanResults.listen((rs) {
       final lista = <DispositivoEncontrado>[];
       for (final r in rs) {
         final nome = r.advertisementData.advName.isNotEmpty ? r.advertisementData.advName : r.device.platformName;
         final ehEcg = nome.startsWith(prefixoNome) || r.advertisementData.serviceUuids.contains(uuidServico);
-        if (ehEcg) lista.add(DispositivoEncontrado(r.device, nome.isEmpty ? 'IC-ECG' : nome, r.rssi));
+        if (ehEcg) lista.add(DispositivoEncontrado(r.device, nome.isEmpty ? prefixoNome : nome, r.rssi));
       }
-      lista.sort((a, b) => b.rssi.compareTo(a.rssi));
-      encontrados = lista;
+      lista.sort((a, b) => b.rssi!.compareTo(a.rssi!));
+      final ids = {for (final d in lista) d.device.remoteId};
+      encontrados = [...lista, ...doSistema.where((d) => !ids.contains(d.device.remoteId))];
+      vistosPorPerto = rs.length;
       notifyListeners();
     });
-    try {
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 8));
-      await FlutterBluePlus.isScanning.where((s) => !s).first;
-    } catch (e) {
-      erro = 'Não foi possível procurar: $e';
-    }
-    if (estado == EstadoBle.procurando) estado = EstadoBle.desligado;
-    notifyListeners();
+    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 8)).timeout(const Duration(seconds: 10));
+    await FlutterBluePlus.isScanning.where((s) => !s).first.timeout(const Duration(seconds: 12));
   }
 
   Future<void> conectar(DispositivoEncontrado d) async {
@@ -177,4 +223,9 @@ class EcgBle extends ChangeNotifier {
     _amostras.close();
     super.dispose();
   }
+}
+
+class _FalhaBusca implements Exception {
+  const _FalhaBusca(this.mensagem);
+  final String mensagem;
 }

@@ -1,7 +1,28 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'deci_marca.dart';
 import 'tema.dart';
+
+/// Largura máxima do conteúdo: no tablet as telas viram uma coluna central legível.
+const larguraMaxConteudo = 760.0;
+
+/// Margem lateral que centraliza o conteúdo numa coluna de no máximo [max] (16 no celular).
+double margemLateral(double largura, {double max = larguraMaxConteudo}) => math.max(16.0, (largura - max) / 2);
+
+/// ListView com margem 16 no celular e conteúdo centralizado (largura máxima) em telas largas.
+class ListaResponsiva extends StatelessWidget {
+  const ListaResponsiva({super.key, required this.children, this.larguraMax = larguraMaxConteudo});
+  final List<Widget> children;
+  final double larguraMax;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, lim) {
+        final m = margemLateral(lim.maxWidth, max: larguraMax);
+        return ListView(padding: EdgeInsets.fromLTRB(m, 16, m, 16), children: children);
+      });
+}
 
 class TagClasse extends StatelessWidget {
   const TagClasse(this.classe, {super.key, this.extra = '', this.grande = false});
@@ -135,35 +156,6 @@ class LogoUfop extends StatelessWidget {
       Image.asset('assets/img/ufop-logo.png', height: altura, semanticLabel: 'Logo da UFOP');
 }
 
-class Rodape extends StatelessWidget {
-  const Rodape({super.key});
-  @override
-  Widget build(BuildContext context) {
-    const pequeno = TextStyle(fontSize: 11.5, color: Cores.suave, height: 1.35);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Caixa('Trabalho científico. As classificações podem conter erros e não substituem a avaliação '
-            'de um profissional de saúde.'),
-        const SizedBox(height: 12),
-        Row(children: [
-          const LogoUfop(altura: 38),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-              Text('Departamento de Engenharia de Controle e Automação',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Cores.texto)),
-              Text('Universidade Federal de Ouro Preto — UFOP', style: pequeno),
-            ]),
-          ),
-        ]),
-        const SizedBox(height: 8),
-        const Text('Guilherme Conde · guilherme.conde@aluno.ufop.edu.br\nAdrielle Santana · Adrielle@ufop.edu.br',
-            style: pequeno),
-      ]),
-    );
-  }
-}
 
 String formatarData(String? iso, {bool comHora = true}) {
   if (iso == null) return '--';

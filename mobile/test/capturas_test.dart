@@ -13,12 +13,19 @@ import 'package:ic_ecg/main.dart';
 import 'package:ic_ecg/pipeline/modelo_rf.dart';
 import 'package:ic_ecg/servicos/monitor.dart';
 import 'package:ic_ecg/servicos/operador.dart';
+import 'package:ic_ecg/servicos/simulador.dart';
 import 'package:ic_ecg/telas/tela_abertura.dart';
 import 'package:ic_ecg/ui/tema.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 const _saida = String.fromEnvironment('CAPTURAS');
+// tamanho da tela em dp, ex.: --dart-define=TAMANHO=800x1280 (tablet em pé)
+const _tamanho = String.fromEnvironment('TAMANHO', defaultValue: '390x844');
+Size get _tela {
+  final p = _tamanho.split('x').map(double.parse).toList();
+  return Size(p[0] * 2, p[1] * 2);
+}
 final _raiz = GlobalKey();
 
 Future<void> _fontes() async {
@@ -59,7 +66,7 @@ void main() {
 
   testWidgets('abertura', (tester) async {
     if (_saida.isEmpty) return;
-    tester.view.physicalSize = const Size(390 * 2, 844 * 2);
+    tester.view.physicalSize = _tela;
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(RepaintBoundary(
@@ -81,7 +88,7 @@ void main() {
 
   testWidgets('telas', (tester) async {
     if (_saida.isEmpty) return;
-    tester.view.physicalSize = const Size(390 * 2, 844 * 2);
+    tester.view.physicalSize = _tela;
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.reset);
     SharedPreferences.setMockInitialValues({});
@@ -92,39 +99,69 @@ void main() {
       final modelo = ModeloRF.deJson(File('assets/modelo_rf.json').readAsStringSync());
       final op = await Operador.carregar();
       final ble = EcgBle();
-      s = Servicos(banco: banco, modelo: modelo, ble: ble, monitor: Monitor(banco, modelo, ble)..medicoesPorSessao = 3,
-          operador: op, child: RepaintBoundary(key: _raiz, child: const DeciApp()));
+      s = Servicos(banco: banco, modelo: modelo, ble: ble, monitor: Monitor(banco, modelo, ble), operador: op,
+          child: RepaintBoundary(key: _raiz, child: const DeciApp()));
     });
     await tester.pumpWidget(s);
-    await tester.pump(const Duration(milliseconds: 500));
-    await _foto(tester, 'tela_1_medicao_inicial');
+    await tester.pump(const Duration(milliseconds: 700));
+    await _foto(tester, 'tela_1_inicio');
 
-    s.operador.entrar('1234');
-    s.monitor.iniciarSimulador(extrassistoles: true);
-    await tester.pump();
-    await tester.runAsync(() => s.monitor.iniciarSessao(const Paciente('Maria Silva', prontuario: '2025-0412', idade: 54, sexo: 'F')));
-    for (var i = 0; i < 225; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-      if (i % 10 == 0) await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 40)));
-    }
+    // simulador: bigeminismo por 21 s
+    await tester.tap(find.text('Simular arritmias'));
     await _esperar(tester);
-    await _foto(tester, 'tela_2_medicao_medindo');
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -520));
+    await tester.tap(find.text('Bigeminismo ventricular'));
     await tester.pump();
-    await _foto(tester, 'tela_3_medicao_resultado');
+    await _foto(tester, 'tela_2_simulador_ritmos');
+    await tester.scrollUntilVisible(find.text('Iniciar simulação'), 200, scrollable: find.byType(Scrollable).last);
+    final iniciar = find.ancestor(of: find.text('Iniciar simulação'), matching: find.bySubtype<ButtonStyleButton>());
+    tester.widget<ButtonStyleButton>(iniciar).onPressed!();
+    await _passar(tester, 21);
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -900));
+    await tester.pump();
+    await _foto(tester, 'tela_3_simulador_resultado');
+    await tester.pageBack();
+    await _esperar(tester);
+
+    // admin + medição simulada de 30 s
+    s.operador.entrar('1234');
+    await tester.pump();
+    await tester.tap(find.text('Iniciar ECG'));
+    await _esperar(tester);
+    await _foto(tester, 'tela_4_nova_medicao');
+    s.monitor.iniciarSimulador(ritmo: Ritmo.extrassistolesV);
+    await tester.pump();
+    await _passar(tester, 6);
+    await _foto(tester, 'tela_4b_previa_sinal');
+    await tester.enterText(find.widgetWithText(TextField, 'Nome completo'), 'Maria Silva');
+    await tester.ensureVisible(find.text('30 s'));
+    await tester.pump();
+    await tester.tap(find.text('30 s'));
+    await tester.pump();
+    final comecar = find.ancestor(of: find.text('Iniciar ECG'), matching: find.bySubtype<ButtonStyleButton>());
+    tester.widget<ButtonStyleButton>(comecar).onPressed!();
+    await _esperar(tester);
+    await _passar(tester, 31);
+    await _foto(tester, 'tela_5_monitor_resumo');
     s.monitor.pararSimulador();
+    await tester.pageBack();
+    await _esperar(tester);
 
     await tester.tap(find.text('Resultados'));
     await _esperar(tester);
-    await _foto(tester, 'tela_4_resultados');
-    await tester.tap(find.text('Maria Silva'));
-    await _esperar(tester, 8);
-    await _foto(tester, 'tela_5_relatorio');
-
-    await tester.pageBack();
+    await _foto(tester, 'tela_6_resultados');
+    await tester.tap(find.text('ADM'));
     await _esperar(tester);
-    await tester.tap(find.text('Operador'));
-    await _esperar(tester);
-    await _foto(tester, 'tela_6_operador');
+    await _foto(tester, 'tela_7_adm');
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -1100));
+    await tester.pump();
+    await _foto(tester, 'tela_8_adm_como_funciona');
   });
+}
+
+Future<void> _passar(WidgetTester tester, int segundos) async {
+  for (var i = 0; i < segundos * 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+    if (i % 10 == 0) await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 40)));
+  }
+  await _esperar(tester);
 }

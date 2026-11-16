@@ -25,11 +25,20 @@ ESP32-S3 + AD8232 ──BLE (100 Hz, pacotes de 10 amostras)──▶ app
 
 | Aba | Quem vê | O que faz |
 |---|---|---|
-| **Medição** | todos | Conectar ao ECG, identificar o paciente, monitor ao vivo, resultado de cada medição |
+| **Início** | todos | Botão redondo **Iniciar ECG** (conectar o ECG → paciente → duração → monitor ao vivo) e **Simular arritmias** |
 | **Resultados** | administrador | Sessões com busca, relatório, **PDF**, excluir sessões e medições, revisar rótulos |
-| **Operador** | todos | Modo paciente/administrador (PIN), simulador, medições por sessão, exportar dataset |
+| **ADM** | todos | Modo paciente/administrador (PIN), sobre o projeto, como o sistema funciona e, para o admin, exportar o dataset |
 
 O app abre sempre no **modo paciente**. No primeiro acesso de administrador, o PIN digitado é criado.
+
+## Simulador de arritmias
+
+Gera ECG sintético em tempo real e mostra, a cada 10 s, o que o modelo classificou e se acertou
+(a classe verdadeira de cada batimento é conhecida). Nada é gravado no banco. Ritmos: sinusal normal,
+bradicardia, taquicardia, arritmia sinusal, extrassístoles ventriculares, bigeminismo, trigeminismo,
+extrassístoles supraventriculares, fusão, taquicardia ventricular, fibrilação atrial, flutter atrial,
+bloqueio de ramo, BAV de 2º grau (Wenckebach) e BAV total. `test/simulador_ritmos_test.dart` mede o
+modelo em cada um (N e V ≈ 100%; S e F ainda não são reconhecidos pelo modelo atual).
 
 ## Instalar no celular
 

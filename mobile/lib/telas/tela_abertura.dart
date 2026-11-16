@@ -56,7 +56,7 @@ class _TelaAberturaState extends State<TelaAbertura> with SingleTickerProviderSt
           final escalaX = 1 + 0.07 * pulo, escalaY = 1 - 0.06 * pulo;
 
           return LayoutBuilder(builder: (context, lim) {
-            final lado = math.min(lim.maxWidth * 0.42, 220.0);
+            final lado = math.min(math.min(lim.maxWidth * 0.42, lim.maxHeight * 0.3), 300.0);
             // o ECG estica até ~86% da largura da tela
             final larguraFinal = math.min(lim.maxWidth * 0.86 / lado, 2.6);
             final largura = 1 + (larguraFinal - 1) * _trecho(t, 1.6, 2.4, Curves.easeOutCubic);

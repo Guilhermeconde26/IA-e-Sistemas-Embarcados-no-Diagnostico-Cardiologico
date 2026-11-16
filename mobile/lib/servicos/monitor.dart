@@ -96,10 +96,11 @@ class Monitor extends ChangeNotifier {
   }
 
   // ---- simulador (modo administrador)
-  void iniciarSimulador({double bpm = 72, double ruido = 0.03, bool extrassistoles = false}) {
+  /// Usa um sinal simulado como fonte de uma medição (sessão marcada como simulada).
+  void iniciarSimulador({Ritmo ritmo = Ritmo.normal, double? bpm, double ruido = 0.03, bool extrassistoles = false}) {
     if (ble.conectado) ble.desconectar();
     _sim?.parar();
-    _sim = SimuladorEcg(bpm: bpm, ruido: ruido, extrassistoles: extrassistoles);
+    _sim = SimuladorEcg(ritmo: ritmo, bpm: bpm, ruido: ruido, extrassistoles: extrassistoles);
     _usar(_sim!.iniciar(), Fonte.simulador);
     notifyListeners();
   }
@@ -112,7 +113,12 @@ class Monitor extends ChangeNotifier {
   }
 
   // ---- sessão
-  Future<void> iniciarSessao(Paciente? p) async {
+  /// Sessão que acabou de terminar (para o resumo e o atalho do relatório).
+  int? sessaoConcluida;
+
+  Future<void> iniciarSessao(Paciente? p, {int? medicoes}) async {
+    if (medicoes != null) medicoesPorSessao = medicoes;
+    sessaoConcluida = null;
     paciente = p;
     sessaoId = await banco.novaSessao(fonte == Fonte.simulador ? 'simulador' : nomeFonte, p,
         simulada: fonte == Fonte.simulador);
@@ -125,6 +131,7 @@ class Monitor extends ChangeNotifier {
   }
 
   void encerrarSessao() {
+    if (sessaoId != null && medicoesFeitas > 0) sessaoConcluida = sessaoId;
     sessaoId = null;
     _bloco.clear();
     notifyListeners();
@@ -197,6 +204,7 @@ class Monitor extends ChangeNotifier {
     daSessao.add(m);
     medicoesFeitas++;
     if (medicoesFeitas >= medicoesPorSessao) {
+      sessaoConcluida = sessaoId;
       sessaoId = null; // sessão completa
       aviso = null;
     }

@@ -202,7 +202,7 @@ class Mascote extends StatelessWidget {
 // ------------------------------------------------------------------ ícones
 enum DeciGlifo {
   ecg, pasta, pessoa, bluetooth, busca, play, stop, pdf, lixeira, compartilhar, sair, chip, alerta, info,
-  coracao, salvar, voltar, simulador, ajustes, dados, limpar, fechar, cadeado,
+  coracao, salvar, voltar, simulador, ajustes, dados, limpar, fechar, cadeado, casa,
 }
 
 /// Ícone no estilo do DECI: blob rosa com traços marrons arredondados.
@@ -354,6 +354,10 @@ class _IconePainter extends CustomPainter {
       case DeciGlifo.fechar:
         canvas.drawLine(p(.24, .24), p(.76, .76), t);
         canvas.drawLine(p(.76, .24), p(.24, .76), t);
+      case DeciGlifo.casa:
+        canvas.drawPath(linha([[.12, .5], [.5, .14], [.88, .5]]), t);
+        canvas.drawPath(linha([[.22, .42], [.22, .86], [.78, .86], [.78, .42]]), t);
+        canvas.drawPath(linha([[.42, .86], [.42, .62], [.58, .62], [.58, .86]]), t);
       case DeciGlifo.cadeado:
         canvas.drawRRect(rr(.2, .44, .8, .88, .1), t);
         arco(.5, .44, .2, math.pi, math.pi);

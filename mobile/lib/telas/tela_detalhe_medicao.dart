@@ -76,7 +76,7 @@ class _TelaDetalheMedicaoState extends State<TelaDetalheMedicao> {
             ),
         ],
       ),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListaResponsiva(children: [
         Text(formatarData(m['criada'] as String?), style: const TextStyle(color: Cores.suave)),
         const SizedBox(height: 10),
         GraficoEcg(sinal: _filtrado, rpeaks: _rpeaks, classePorPico: classes, altura: 230, destaque: _destaque),
